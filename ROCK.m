@@ -1,61 +1,85 @@
-brick.GyroCalibrate(1);
+% constants
+ult = 4;
+gyro = 2;
+right = 'C';
+left = 'B';
+% color = 3;
 
-while true
-    moveUntil(30);
-    turnRight();
-end
+brick.GyroCalibrate(gyro);
 
-function turnRight()
-    cur = brick.GyroAngle(1);
-    tar = curr + 90;
+moveUntil(30, brick, ult, left, right);
+turnRight(brick, gyro, left, right);
+
+%while true
+ %   moveUntil(30, brick, ult, left, right);
+ %   turnRight(brick, gyro);
+%end
+
+function turnRight(brick, gyro, left, right)
+    cur = brick.GyroAngle(gyro);
+    tar = cur + 90;
     Kp = 0.5;
     err = tar - cur;
 
-    moveRight(0);
+    disp(err);
+    disp(cur);
 
     while abs(err) > 1
         prop = Kp * err;
 
-        moveLeft(prop);
-        moveRight(-prop);
+        moveLeft(prop, brick, left);
+        moveRight(-prop, brick, right);
 
-        cur = brick.GyroAngle(1);
+        cur = brick.GyroAngle(gyro);
         err = tar - cur;
 
         pause(0.5);
     end
 
-    moveLeft(0);
+    moveRight(0, brick, right);
+    moveLeft(0, brick, left);
 
     disp('done');
 end
 
-function moveLeft(speed)
-    brick.moveMotor('A', speed);
+function moveLeft(speed, brick, left)
+    brick.MoveMotor(left, speed);
 end
 
-function moveRight(speed)
-    brick.moveMotor('D', speed);
+function [angle] = getLeft()
+    angle = brick.GetMotorAngle(left);
 end
 
-function moveForward(speed)
-    brick.moveMotor('AD', speed);
+function moveRight(speed, brick, right)
+    brick.MoveMotor(right, speed * 0.92);
 end
 
-function moveUntil(dist)
-    cur = brick.UltrasonicDist(1);
+function [angle] = getRight()
+    angle = brick.GetMotorAngle(right);
+end
+
+function moveForward(speed, brick, left, right)
+    moveLeft(speed, brick, left);
+    moveRight(speed, brick, right);
+end
+
+function moveUntil(dist, brick, ult, left, right)
+    cur = brick.UltrasonicDist(ult);
     tar = dist;
-    Kp = 0.5;
-    err = abs(tar - cur);
+    Kp = 2;
+    err = cur - tar;
 
-    while err > 1
+    while abs(err) > 1
         prop = Kp * err;
 
-        moveForward(prop);
+        moveForward(prop, brick, left, right);
 
-        cur = brick.GyroAngle(1);
-        err = abs(tar - cur);
+        cur = brick.UltrasonicDist(ult);
+        err = cur - tar;
 
-        pause(0.5);
+        % pause(0.0001);
     end
+
+    brick.StopAllMotors();
+    disp('done');
 end
