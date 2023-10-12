@@ -3,37 +3,78 @@ ult = 4;
 gyro = 2;
 right = 'C';
 left = 'B';
-% color = 3;
-
 brick.GyroCalibrate(gyro);
 
-moveUntil(30, brick, ult, left, right);
-turnRight(brick, gyro, left, right);
+% color = 3;
 
-%while true
- %   moveUntil(30, brick, ult, left, right);
- %   turnRight(brick, gyro);
-%end
+setGlobalRunning(true);
+
+while getGlobalRunning()
+    moveUntil(30, brick, ult, left, right);
+    % turnRight(brick, gyro, left, right);
+end
+
+function setGlobalRunning(val)
+    global running;
+    running = val;
+end
+
+function r = getGlobalRunning()
+    global running;
+    r = running;
+end
 
 function turnRight(brick, gyro, left, right)
     cur = brick.GyroAngle(gyro);
-    tar = cur + 90;
-    Kp = 0.5;
+
+    n = fix(rand() * 2);
+
+    if isnan(cur)
+        cur = 0;
+    end
+
+    if n == 0
+        tar = cur + 90 - mod(cur, 90);
+    else
+        tar = cur - 90 + mod(cur, 90);
+    end
+
+    Kp = 0.53;
+    Ki = 0.075;
+    Kd = 0.1;
     err = tar - cur;
 
     disp(err);
     disp(cur);
 
-    while abs(err) > 1
+    prevIntegral = 0;
+    prevErr = err;
+    intActZone = 10;
+
+    while abs(err) > 4
         prop = Kp * err;
 
-        moveLeft(prop, brick, left);
-        moveRight(-prop, brick, right);
+        derivative = Kd * (err - prevErr);
+
+        if abs(err) < intActZone
+            integral = Ki * (err + prevIntegral);
+        else
+            integral = 0;
+        end
+
+        factor = prop + integral + derivative;
+
+        moveLeft(factor, brick, left);
+        moveRight(-factor, brick, right);
 
         cur = brick.GyroAngle(gyro);
+        prevIntegral = prevIntegral + err;
+        prevErr = err;
         err = tar - cur;
 
-        pause(0.5);
+        if brick.TouchPressed(1)
+            setGlobalRunning(false);
+        end
     end
 
     moveRight(0, brick, right);
@@ -51,7 +92,7 @@ function [angle] = getLeft()
 end
 
 function moveRight(speed, brick, right)
-    brick.MoveMotor(right, speed * 0.92);
+    brick.MoveMotor(right, speed * 0.84);
 end
 
 function [angle] = getRight()
@@ -64,20 +105,43 @@ function moveForward(speed, brick, left, right)
 end
 
 function moveUntil(dist, brick, ult, left, right)
+    Kp = 2;
+    Ki = 0.02;
+    Kd = 0.1;
+
     cur = brick.UltrasonicDist(ult);
     tar = dist;
-    Kp = 2;
     err = cur - tar;
 
-    while abs(err) > 1
+    prevIntegral = 0;
+    prevErr = err;
+    intActZone = 10;
+
+    while abs(err) > 2 && getGlobalRunning()
         prop = Kp * err;
 
-        moveForward(prop, brick, left, right);
+        derivative = Kd * (err - prevErr);
+
+        if abs(err) < intActZone
+            integral = Ki * (err + prevIntegral);
+        else
+            integral = 0;
+        end
+
+        factor = prop + integral + derivative;
+
+        moveForward(factor, brick, left, right);
 
         cur = brick.UltrasonicDist(ult);
+        prevIntegral = prevIntegral + err;
+        prevErr = err;
         err = cur - tar;
 
-        % pause(0.0001);
+        if brick.TouchPressed(1)
+            setGlobalRunning(false);
+        end
+
+        disp(brick.UltrasonicDist(ult));
     end
 
     brick.StopAllMotors();
