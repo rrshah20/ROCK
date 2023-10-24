@@ -10,20 +10,21 @@ brick.GyroCalibrate(gyro);
 setGlobalDirection(1);
 setGlobalRunning(true);
 
-while true
-    moveUntilTouch(brick, ult, gyro, left, right, touch, kill);
-    %moveUntil(brick, gyro, left, right, (-8/(2*pi)*360));
+% turn(brick, gyro, left, right, (90 * getGlobalDirection()), kill);
 
-    pause(3);
+while getGlobalRunning()
+    moveUntilTouch(brick, ult, gyro, left, right, touch, kill);
+    %moveUntil(brick, gyro, left, right, 36); %(-8/(2*pi)*360));
+
+    pause(4);
 
     turn(brick, gyro, left, right, (90 * getGlobalDirection()), kill);
 
-    pause(5);
+    pause(6);
 
     if (brick.TouchPressed(kill))
-        break;
+        setGlobalRunning(false);
     end
-
 end
 
 function setGlobalDirection(val)
@@ -56,8 +57,8 @@ function turn(brick, gyro, left, right, dir, kill)
 
     tar = cur + dir;
 
-    Kp = 0.53;
-    Ki = 0.077;
+    Kp = 0.55;
+    Ki = 0.05;
     Kd = 0.2;
     err = tar - cur;
 
@@ -66,9 +67,10 @@ function turn(brick, gyro, left, right, dir, kill)
 
     prevIntegral = 0;
     prevErr = err;
-    intActZone = 10;
+    intActZone = 25;
+    factor = err;
 
-    while abs(err) > 2
+    while abs(err) > 2 || abs(factor) > 5
         prop = Kp * err;
 
         derivative = Kd * (err - prevErr);
@@ -94,6 +96,7 @@ function turn(brick, gyro, left, right, dir, kill)
         % disp(err);
 
         if (brick.TouchPressed(kill))
+            setGlobalRunning(false);
             break;
         end
     end
@@ -101,7 +104,7 @@ function turn(brick, gyro, left, right, dir, kill)
     brick.StopAllMotors();
 
     if getGlobalDirection() == -1
-        brick.MoveMotorAngleRel(left + right, 50, 3.5 * 360, 'Brake');
+        brick.MoveMotorAngleRel(left + right, 75, 12 * 360, 'Brake');
     end
 
     disp('done');
@@ -146,10 +149,10 @@ function moveUntilTouch(brick, ult, gyro, left, right, touch, kill)
 
     err = curAng - ang;
 
-    while brick.UltrasonicDist(ult) < 50 && ~brick.TouchPressed(touch)
+    while brick.UltrasonicDist(ult) < 70 && ~brick.TouchPressed(touch)
         off = -err * Kp;
 
-        moveForward(20, brick, left, right, off);
+        moveForward(75, brick, left, right, off);
 
         curAng = brick.GyroAngle(gyro);
         err = curAng - ang;
@@ -159,6 +162,7 @@ function moveUntilTouch(brick, ult, gyro, left, right, touch, kill)
         % disp(curAng);
 
         if (brick.TouchPressed(kill))
+            setGlobalRunning(false);
             break;
         end
     end
@@ -167,10 +171,10 @@ function moveUntilTouch(brick, ult, gyro, left, right, touch, kill)
 
     if (brick.UltrasonicDist(ult) >= 50)
         setGlobalDirection(-1);
-        brick.MoveMotorAngleRel(left + right, 50, 1 * 360, 'Brake');
+        brick.MoveMotorAngleRel(left + right, 35, 1 * 360, 'Brake');
     else
         setGlobalDirection(1);
-        brick.MoveMotorAngleRel(left + right, 50, -1 * 360, 'Brake');
+        brick.MoveMotorAngleRel(left + right, 35, -1 * 360, 'Brake');
     end
 
     disp('done');
