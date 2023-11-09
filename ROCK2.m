@@ -31,10 +31,25 @@ while true
 
     switch key
         case 'uparrow'
-            brick.MoveMotorAngleRel(claw, 75, 360 * 6);
+            brick.MoveMotor(claw, 65);
         case 'downarrow'
-            brick.MoveMotorAngleRel(claw, 75, -360 * 6);
+            brick.MoveMotor(claw, -65);
+        case 'w'
+            brick.MoveMotor(right, 25);
+            brick.MoveMotor(left, 29);
+        case 's'
+            brick.MoveMotor(right, -25);
+            brick.MoveMotor(left, -29);
+        case 'a'
+            brick.MoveMotor(right, 25);
+            brick.MoveMotor(left, -29);
+        case 'd'
+            brick.MoveMotor(right, -25);
+            brick.MoveMotor(left, 29);
+        case 0
+            brick.StopAllMotors();
         case 'q'
+            brick.StopAllMotors();
             break;
     end
 end
