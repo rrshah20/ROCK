@@ -6,35 +6,20 @@ left = 'B';
 color = 2;
 claw = 'D';
 
-leftSpeed = 67;
+leftSpeed = 67.5;
 rightSpeed = 65;
 
 setGlobalRunning(true);
 brick.SetColorMode(color, 2);
 
-while false
-    disp(brick.ColorCode(color));
-
-    if brick.TouchPressed(kill)
-        setGlobalRunning(false);
-    end
-end
-
-disp(brick.TouchPressed(kill));
-
 global key
 
 setDone(false);
 
-while false
-    disp(brick.ColorCode(color));
-end
-
 while getGlobalRunning()
     disp('1');
-    if brick.UltrasonicDist(ult) > 35 && brick.TouchPressed(touch) == 1
-        disp('10');
-
+    if brick.TouchPressed(touch) == 1
+        disp('3');
         brick.StopAllMotors('Brake');
 
         brick.MoveMotor(left, -leftSpeed);
@@ -43,16 +28,8 @@ while getGlobalRunning()
         pause(0.6);
 
         brick.StopAllMotors('Brake');
-        brick.MoveMotorAngleRel(left, 50, 2.1 * 180, 'Brake');
 
-        pause(2);
-
-        brick.StopAllMotors('Brake');
-
-        pause(0.5);
-
-        brick.MoveMotor(left, leftSpeed);
-        brick.MoveMotor(right, rightSpeed);
+        brick.MoveMotorAngleRel(right, 50, 2.25 * 180, 'Brake');
 
         pause(2);
     elseif brick.UltrasonicDist(ult) > 35
@@ -73,20 +50,6 @@ while getGlobalRunning()
         pause(1.5);
 
         brick.StopAllMotors();
-    elseif brick.TouchPressed(touch) == 1
-        disp('3');
-        brick.StopAllMotors('Brake');
-
-        brick.MoveMotor(left, -leftSpeed);
-        brick.MoveMotor(right, -rightSpeed);
-
-        pause(0.6);
-
-        brick.StopAllMotors('Brake');
-
-        brick.MoveMotorAngleRel(right, 50, 2.25 * 180, 'Brake');
-
-        pause(2);
     else
         disp('4');
         brick.StopAllMotors();
@@ -96,7 +59,7 @@ while getGlobalRunning()
     
         t = 0;
 
-        while t < 0.45
+        while t < 0.4
             disp('6');
             if brick.ColorCode(color) == 5
                 pause(0.5);
@@ -186,7 +149,7 @@ while getGlobalRunning()
                 end
                 CloseKeyboard();
                 break;
-            elseif brick.ColorCode(color) == 7 || brick.ColorCode(color) == 6 || brick.ColorCode(color) == 4 && getDone() == true
+            elseif brick.ColorCode(color) == 4 && getDone()
                 brick.StopAllMotors();
                 setGlobalRunning(false);
                 break;
